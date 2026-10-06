@@ -1,0 +1,7 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "chaamp-dev"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+confirm_changeset = false
+parameter_overrides = "Stage=dev ModelArn=REPLACE_WITH_MODEL_ARN FrontendOrigins=http://localhost:5173 KnowledgeBaseId=REPLACE_WITH_KB_ID DataSourceId=REPLACE_WITH_DS_ID"

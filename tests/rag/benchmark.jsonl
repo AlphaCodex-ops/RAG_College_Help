@@ -1,0 +1,3 @@
+{"id":"q01","question":"What is the minimum attendance requirement?","expected_source":"Academic Regulations","expected_keywords":["75"],"should_answer":true}
+{"id":"q02","question":"What is the student handbook contact policy?","expected_source":"Student Handbook","expected_keywords":["contact"],"should_answer":true}
+{"id":"q03","question":"Who won the 2030 football world cup?","expected_source":null,"expected_keywords":[],"should_answer":false}

@@ -1,0 +1,1 @@
+"""Shared campus common layer."""
