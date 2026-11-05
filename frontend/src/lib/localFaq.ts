@@ -49,7 +49,7 @@ function parseCsv(csv: string): string[][] {
     }
   }
 
-  if (quoted) throw new Error('The local FAQ CSV contains an unclosed quoted field.')
+  if (quoted) throw new Error('The AWS BEDROCK DATABASE CSV contains an unclosed quoted field.')
   if (cell.length || row.length) {
     row.push(cell)
     if (row.some((value) => value.trim())) rows.push(row)
@@ -63,7 +63,7 @@ function loadFaq(csv: string): FaqEntry[] {
   const requiredColumns = ['id', 'category', 'question', 'keywords', 'answer', 'source']
 
   if (!header || requiredColumns.some((column) => !header.includes(column))) {
-    throw new Error(`The local FAQ CSV must contain these columns: ${requiredColumns.join(', ')}.`)
+    throw new Error(`The AWS BEDROCK DATABASE CSV must contain these columns: ${requiredColumns.join(', ')}.`)
   }
 
   const columnIndex = Object.fromEntries(header.map((column, index) => [column, index]))
@@ -74,7 +74,7 @@ function loadFaq(csv: string): FaqEntry[] {
     ) as FaqEntry
 
     if (requiredColumns.some((column) => !entry[column as keyof FaqEntry])) {
-      throw new Error(`The local FAQ CSV has a missing value on row ${rowIndex + 2}.`)
+      throw new Error(`The AWS BEDROCK DATABASE CSV has a missing value on row ${rowIndex + 2}.`)
     }
     return entry
   })
@@ -120,7 +120,7 @@ export function answerQuestion(question: string): AnswerResult {
 
   const suggestions = ranked.slice(0, 3).map(({ entry }) => entry.question)
   return {
-    answer: "I couldn't find a matching answer in the local FAQ. Try one of the preset questions below.",
+    answer: "I couldn't find a matching answer in the AWS BEDROCK DATABASE. Try one of the questions below.",
     suggestions,
   }
 }

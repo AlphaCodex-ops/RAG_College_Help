@@ -1,6 +1,6 @@
 # CHAAMP
 
-CHAAMP is a campus assistant project with a standalone, local FAQ chat frontend and a separate AWS SAM backend scaffold.
+CHAAMP is a campus assistant project with a standalone, AWS BEDROCK DATABASE chat frontend and a separate AWS SAM backend scaffold.
 
 ## Run the local chat
 

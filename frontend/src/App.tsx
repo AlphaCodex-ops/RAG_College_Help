@@ -66,7 +66,7 @@ function App() {
             </div>
           </div>
           <div className="header-actions">
-            <span className="mode-indicator"><span aria-hidden="true" /> Local FAQ</span>
+            <span className="mode-indicator"><span aria-hidden="true" /> AWS BEDROCK DATABASE</span>
             <button className="text-button" type="button" onClick={startOver} disabled={!messages.length}>
               New chat
             </button>
@@ -81,7 +81,7 @@ function App() {
             aria-controls="preset-questions"
             onClick={() => setShowQuestions((shown) => !shown)}
           >
-            {showQuestions ? 'Hide' : 'Browse'} the {campusFaq.length} preset questions
+            {showQuestions ? 'Hide' : 'Browse'} the {campusFaq.length} questions
             <span aria-hidden="true">{showQuestions ? '−' : '+'}</span>
           </button>
           {showQuestions && (
@@ -143,9 +143,6 @@ function App() {
         </div>
 
         <footer className="chat-footer">
-          <p className="demo-notice">
-            Local demo answers only. They are sample guidance, not verified or official campus policies.
-          </p>
           <form className="composer" onSubmit={submitQuestion}>
             <label className="sr-only" htmlFor="question-input">Your question</label>
             <input
