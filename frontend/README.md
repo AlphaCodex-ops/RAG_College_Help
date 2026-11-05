@@ -1,32 +1,14 @@
-# React + TypeScript + Vite
+# CHAAMP local chat
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The frontend is a local-only campus FAQ chat demo. It does not need AWS credentials, Cognito, an API server, or a `.env` file. Its 30 sample questions and answers are in `src/data/campus_faq.csv`; answers are example guidance and are not verified campus policy.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Open the local URL printed by Vite (normally `http://localhost:5173`). Use **Browse the 30 preset questions** or enter a question. Responses are matched from the local CSV; unsupported questions receive suggested FAQ entries instead of generated answers.
+
+To use real campus information, replace the sample rows in `src/data/campus_faq.csv` with verified content while keeping the CSV column names unchanged.

@@ -1,320 +1,167 @@
-import type { ReactNode } from 'react'
-import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { answerQuestion, campusFaq } from './lib/localFaq'
+import './App.css'
 
-const currentUser = {
-  name: 'Demo Student',
-  email: 'demo@student.example',
-  role: 'STUDENT' as const,
+type Message = {
+  id: number
+  role: 'assistant' | 'user'
+  text: string
+  source?: string
+  suggestions?: string[]
 }
 
-const dashboardCards = [
-  { label: 'Upcoming Events', value: '3' },
-  { label: 'Unread Notices', value: '5' },
-  { label: 'Open Requests', value: '2' },
-  { label: 'Knowledge Matches', value: '18' },
-]
-
-const mockEvents = [
-  { id: '1', title: 'Tech Fest Orientation', startsAt: '2026-10-12T10:00:00Z', status: 'PUBLISHED' },
-  { id: '2', title: 'Career Guidance Webinar', startsAt: '2026-10-14T15:30:00Z', status: 'PUBLISHED' },
-  { id: '3', title: 'Campus Cleanliness Drive', startsAt: '2026-10-20T08:00:00Z', status: 'DRAFT' },
-]
-
-const mockAnnouncements = [
-  { id: 'a1', title: 'Semester exam timetable released', priority: 'HIGH' },
-  { id: 'a2', title: 'Hostel maintenance schedule', priority: 'NORMAL' },
-  { id: 'a3', title: 'Transport holiday update', priority: 'LOW' },
-]
-
-const mockRequests = [
-  { id: 'r1', category: 'ACADEMIC', status: 'OPEN', title: 'Attendance clarification' },
-  { id: 'r2', category: 'HOSTEL', status: 'RESOLVED', title: 'Room fan issue' },
-]
-
-function RequireAuth({ allowRoles, children }: { allowRoles?: Array<'ADMIN' | 'STAFF' | 'STUDENT'>; children: ReactNode }) {
-  if (!currentUser) {
-    return <Navigate to="/login" replace />
-  }
-
-  if (allowRoles && !allowRoles.includes(currentUser.role)) {
-    return <Navigate to="/" replace />
-  }
-
-  return <>{children}</>
-}
-
-function Layout() {
-  const { pathname } = useLocation()
-
-  const navItems = [
-    { to: '/', label: 'Dashboard' },
-    { to: '/assistant', label: 'Ask Assistant' },
-    { to: '/events', label: 'Events' },
-    { to: '/announcements', label: 'Announcements' },
-    { to: '/requests', label: 'My Requests' },
-    { to: '/admin', label: 'Admin' },
-  ]
-
-  return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div className="brand-wrap">
-          <div className="brand-badge">C</div>
-          <div>
-            <div className="brand-title">CHAAMP</div>
-            <div className="brand-subtitle">Campus assistant</div>
-          </div>
-        </div>
-
-        <nav className="nav">
-          {navItems.map((item) => (
-            <Link key={item.to} to={item.to} className={pathname === item.to ? 'nav-link active' : 'nav-link'}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="user-pill">
-          <span>{currentUser.name}</span>
-          <small>{currentUser.role}</small>
-        </div>
-      </header>
-
-      <main className="page-wrap">
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/assistant" element={<AssistantPage />} />
-          <Route path="/events" element={<EventsPage />} />
-          <Route path="/announcements" element={<AnnouncementsPage />} />
-          <Route path="/requests" element={<RequireAuth allowRoles={['STUDENT', 'STAFF']}><RequestsPage /></RequireAuth>} />
-          <Route path="/admin" element={<RequireAuth allowRoles={['ADMIN']}><AdminDashboardPage /></RequireAuth>} />
-          <Route path="/admin/documents" element={<RequireAuth allowRoles={['ADMIN']}><AdminDocumentsPage /></RequireAuth>} />
-          <Route path="/admin/requests" element={<RequireAuth allowRoles={['ADMIN']}><AdminRequestsPage /></RequireAuth>} />
-          <Route path="/admin/analytics" element={<RequireAuth allowRoles={['ADMIN']}><AnalyticsPage /></RequireAuth>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-    </div>
-  )
-}
+const starterQuestions = campusFaq.slice(0, 4)
 
 function App() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [question, setQuestion] = useState('')
+  const [showQuestions, setShowQuestions] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const nextMessageId = useRef(1)
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [messages])
+
+  function ask(questionText: string) {
+    const text = questionText.trim()
+    if (!text) return
+
+    const result = answerQuestion(text)
+    const nextId = nextMessageId.current
+    nextMessageId.current += 2
+    setMessages((current) => [
+      ...current,
+      { id: nextId, role: 'user', text },
+      {
+        id: nextId + 1,
+        role: 'assistant',
+        text: result.answer,
+        source: result.source,
+        suggestions: result.suggestions,
+      },
+    ])
+    setQuestion('')
+  }
+
+  function submitQuestion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    ask(question)
+  }
+
+  function startOver() {
+    setMessages([])
+    setQuestion('')
+  }
+
   return (
-    <BrowserRouter>
-      <Layout />
-    </BrowserRouter>
-  )
-}
+    <main className="app-shell">
+      <section className="chat-window" aria-label="CHAAMP campus assistant">
+        <header className="chat-header">
+          <div className="brand">
+            <div className="brand-avatar" aria-hidden="true">C</div>
+            <div>
+              <h1>CHAAMP</h1>
+              <p>Campus assistant</p>
+            </div>
+          </div>
+          <div className="header-actions">
+            <span className="mode-indicator"><span aria-hidden="true" /> Local FAQ</span>
+            <button className="text-button" type="button" onClick={startOver} disabled={!messages.length}>
+              New chat
+            </button>
+          </div>
+        </header>
 
-function LoginPage() {
-  return (
-    <section className="panel login-panel">
-      <h1>Welcome to CHAAMP</h1>
-      <p>Sign in with Cognito or confirm your email to continue.</p>
-      <div className="stack">
-        <input placeholder="Email" defaultValue="demo@student.example" />
-        <input type="password" placeholder="Password" defaultValue="placeholder" />
-        <button type="button">Continue</button>
-      </div>
-      <p className="placeholder-note">AWS Cognito and API values are placeholders until the live environment is configured.</p>
-    </section>
-  )
-}
-
-function DashboardPage() {
-  return (
-    <section>
-      <div className="section-header">
-        <h1>Dashboard</h1>
-        <Link to="/assistant" className="button ghost">Ask the assistant</Link>
-      </div>
-
-      <div className="cards-grid">
-        {dashboardCards.map((card) => (
-          <article key={card.label} className="panel stat-card">
-            <div className="stat-label">{card.label}</div>
-            <div className="stat-value">{card.value}</div>
-          </article>
-        ))}
-      </div>
-
-      <div className="split-grid">
-        <div className="panel">
-          <h3>Next events</h3>
-          <ul className="list">
-            {mockEvents.slice(0, 3).map((event) => (
-              <li key={event.id}>{event.title} • {new Date(event.startsAt).toLocaleDateString()}</li>
-            ))}
-          </ul>
+        <div className="question-browser">
+          <button
+            className="browse-button"
+            type="button"
+            aria-expanded={showQuestions}
+            aria-controls="preset-questions"
+            onClick={() => setShowQuestions((shown) => !shown)}
+          >
+            {showQuestions ? 'Hide' : 'Browse'} the {campusFaq.length} preset questions
+            <span aria-hidden="true">{showQuestions ? '−' : '+'}</span>
+          </button>
+          {showQuestions && (
+            <div className="preset-list" id="preset-questions">
+              {campusFaq.map((item) => (
+                <button
+                  className="preset-question"
+                  key={item.id}
+                  type="button"
+                  onClick={() => ask(item.question)}
+                >
+                  <span>{item.question}</span>
+                  <small>{item.category}</small>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="panel">
-          <h3>Latest notices</h3>
-          <ul className="list">
-            {mockAnnouncements.map((announcement) => (
-              <li key={announcement.id}>{announcement.title} • {announcement.priority}</li>
-            ))}
-          </ul>
+        <div className="conversation" aria-live="polite">
+          {!messages.length ? (
+            <div className="welcome">
+              <div className="welcome-icon" aria-hidden="true">C</div>
+              <h2>Hi! What can I help you with?</h2>
+              <p>Ask a campus question or choose one of these to get started.</p>
+              <div className="starter-questions">
+                {starterQuestions.map((item) => (
+                  <button key={item.id} type="button" onClick={() => ask(item.question)}>
+                    {item.question}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="message-list">
+              {messages.map((message) => (
+                <article className={`message-row ${message.role}`} key={message.id}>
+                  {message.role === 'assistant' && (
+                    <div className="message-avatar" aria-hidden="true">C</div>
+                  )}
+                  <div className="message-content">
+                    <div className="message-bubble">{message.text}</div>
+                    {message.source && <div className="message-source">Source: {message.source}</div>}
+                    {message.suggestions && (
+                      <div className="related-questions" aria-label="Suggested questions">
+                        {message.suggestions.map((suggestion) => (
+                          <button key={suggestion} type="button" onClick={() => ask(suggestion)}>
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </article>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </div>
-      </div>
-    </section>
-  )
-}
 
-function AssistantPage() {
-  return (
-    <section className="panel chat-panel">
-      <div className="section-header">
-        <h1>Ask the assistant</h1>
-        <span className="badge success">Student view</span>
-      </div>
-
-      <div className="chat-box">
-        <div className="message assistant">What is the minimum attendance requirement?</div>
-        <div className="message user">I need to know the rule for attendance.</div>
-        <div className="message assistant answer">
-          The minimum attendance requirement is 75%. Please refer to the Academic Regulations document for the latest policy.
-        </div>
-        <div className="source-row">
-          <span className="chip">Academic Regulations</span>
-          <span className="chip">v2026.1</span>
-          <span className="chip">Approved</span>
-        </div>
-      </div>
-
-      <div className="chat-input-row">
-        <input placeholder="Ask a campus question..." defaultValue="What is the minimum attendance requirement?" />
-        <button type="button">Send</button>
-      </div>
-    </section>
-  )
-}
-
-function EventsPage() {
-  return (
-    <section>
-      <div className="section-header">
-        <h1>Events</h1>
-        <Link to="/admin" className="button ghost">Admin tools</Link>
-      </div>
-      <div className="panel list-panel">
-        {mockEvents.map((event) => (
-          <div key={event.id} className="list-item">
-            <div>
-              <strong>{event.title}</strong>
-              <small>{new Date(event.startsAt).toLocaleString()}</small>
-            </div>
-            <span className="badge">{event.status}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function AnnouncementsPage() {
-  return (
-    <section>
-      <h1>Announcements</h1>
-      <div className="panel list-panel">
-        {mockAnnouncements.map((item) => (
-          <div key={item.id} className="list-item">
-            <div>
-              <strong>{item.title}</strong>
-              <small>Published recently</small>
-            </div>
-            <span className="badge">{item.priority}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function RequestsPage() {
-  return (
-    <section>
-      <h1>My requests</h1>
-      <div className="panel list-panel">
-        {mockRequests.map((request) => (
-          <div key={request.id} className="list-item">
-            <div>
-              <strong>{request.title}</strong>
-              <small>{request.category}</small>
-            </div>
-            <span className="badge">{request.status}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function AdminDashboardPage() {
-  return (
-    <section>
-      <h1>Admin dashboard</h1>
-      <div className="cards-grid">
-        <Link className="panel stat-card block-link" to="/admin/documents">
-          <div className="stat-label">Documents</div>
-          <div className="stat-value">12</div>
-        </Link>
-        <Link className="panel stat-card block-link" to="/admin/requests">
-          <div className="stat-label">Open complaints</div>
-          <div className="stat-value">8</div>
-        </Link>
-        <Link className="panel stat-card block-link" to="/admin/analytics">
-          <div className="stat-label">Queries</div>
-          <div className="stat-value">241</div>
-        </Link>
-      </div>
-    </section>
-  )
-}
-
-function AdminDocumentsPage() {
-  return (
-    <section>
-      <h1>Document management</h1>
-      <div className="panel list-panel">
-        <div className="doc-row"><strong>Academic Regulations</strong><span className="badge success">ACTIVE</span></div>
-        <div className="doc-row"><strong>Student Handbook</strong><span className="badge warn">REVIEW</span></div>
-        <div className="doc-row"><strong>Fee Policy</strong><span className="badge">ARCHIVED</span></div>
-      </div>
-    </section>
-  )
-}
-
-function AdminRequestsPage() {
-  return (
-    <section>
-      <h1>All requests</h1>
-      <div className="panel list-panel">
-        {mockRequests.map((request) => (
-          <div key={request.id} className="list-item">
-            <div>
-              <strong>{request.title}</strong>
-              <small>{request.category}</small>
-            </div>
-            <span className="badge">{request.status}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function AnalyticsPage() {
-  return (
-    <section>
-      <h1>Analytics</h1>
-      <div className="cards-grid">
-        <div className="panel stat-card"><div className="stat-label">Queries today</div><div className="stat-value">94</div></div>
-        <div className="panel stat-card"><div className="stat-label">Answer rate</div><div className="stat-value">81%</div></div>
-        <div className="panel stat-card"><div className="stat-label">Avg latency</div><div className="stat-value">1.2s</div></div>
-      </div>
-    </section>
+        <footer className="chat-footer">
+          <p className="demo-notice">
+            Local demo answers only. They are sample guidance, not verified or official campus policies.
+          </p>
+          <form className="composer" onSubmit={submitQuestion}>
+            <label className="sr-only" htmlFor="question-input">Your question</label>
+            <input
+              id="question-input"
+              autoComplete="off"
+              placeholder="Ask a campus question..."
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+            />
+            <button type="submit" disabled={!question.trim()} aria-label="Send question">
+              Send <span aria-hidden="true">↑</span>
+            </button>
+          </form>
+        </footer>
+      </section>
+    </main>
   )
 }
 

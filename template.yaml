@@ -9,19 +9,19 @@ Parameters:
     AllowedValues: [dev, prod]
   KnowledgeBaseId:
     Type: String
-    Default: REPLACE_WITH_KB_ID
+    Default: arn:aws:bedrock:ap-south-1::knowledge-base/Mejfni#&27BF#&
   DataSourceId:
     Type: String
-    Default: REPLACE_WITH_DS_ID
+    Default: arn:aws:bedrock:ap-south-1::data-source/fkoe$hfu84BRUin3
   ModelArn:
     Type: String
-    Default: REPLACE_WITH_MODEL_ARN
+    Default: arn:aws:bedrock:ap-south-1::foundation-model/anthropic.claude-v2
   FrontendOrigins:
     Type: CommaDelimitedList
     Default: "http://localhost:5173"
   AlertEmail:
     Type: String
-    Default: ""
+    Default: "johan.janil2024@vitstudent.ac.in"
 
 Globals:
   Function:
